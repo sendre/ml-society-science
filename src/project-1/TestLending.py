@@ -19,7 +19,8 @@ encoded_features = list(filter(lambda x: x != target, X.columns))
 def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
     n_test_examples = len(X_test)
     utility = 0
-    ## Example test function - this is not an unbiased test as it uses the training data directly. Adapt as necessary
+
+    ## Example test function - this is only an unbiased test if the data has not been seen in training
     for t in range(n_test_examples):
         action = decision_maker.get_best_action(X_test.iloc[t])
 
@@ -28,7 +29,7 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
         amount = X_test['amount'].iloc[t]
         # If we don't grant the loan then nothing happens
         if (action==1):
-            if (good_loan == 2):
+            if (good_loan != 1):
                 utility -= amount
             else:
                 utility += amount*(pow(1 + interest_rate, duration) - 1)
@@ -39,25 +40,13 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
 
 
 ### Setup model
-#import logistic_banker
-#decision_maker = logistic_banker.LogisticBanker()
-from sklearn.ensemble import BaggingClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import linear_model
-from sklearn.neural_network import MLPClassifier
-mlp = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(16, 4, 2), random_state=1)
-bagging = BaggingClassifier(KNeighborsClassifier(), n_estimators=10)
-knn = KNeighborsClassifier()
-logistic = linear_model.LogisticRegression()
-import name_banker
-import random_banker
+import random_banker # this is a random banker
+decision_maker = random_banker.RandomBanker()
+interest_rate = 0.05
 
-banker_logistic = name_banker.NameBanker(logistic)
-banker_random = random_banker.RandomBanker()
-bankers = [banker_logistic, banker_random]
-
+### Do a number of preliminary tests by splitting the data in parts
 from sklearn.model_selection import train_test_split
-n_tests = 10
+n_tests = 100
 utility = 0
 interest_rate = 0.005
 for banker in bankers:
